@@ -116,21 +116,25 @@ class Provider_Geodir extends Base {
 			$term_id = ! empty( $args[1] ) && (int) $args[1] > 0 ? (int) $args[1] : 0;
 			$value = '';
 
+			// check for loop values first
+			if($looping_query_id = \Bricks\Query::is_any_looping()){
+				$type = \Bricks\Query::get_loop_object_type( $looping_query_id );
+				if ( ! $term_id && 'term' === $type ) {
+
+					$term_id = \Bricks\Query::get_loop_object_id();
+				}
+			}
+
+			// then do other checks
 			if ( ! $term_id && geodir_is_page( 'archive' ) ) {
 				$current_category = get_queried_object();
 				$term_id = isset( $current_category->term_id ) ?  absint( $current_category->term_id ) : 0;
 			} else if ( ! $term_id && ! empty( $gd_post ) ) {
 				$term_id = ! empty( $gd_post->default_category ) ? absint( $gd_post->default_category ) : 0;
-			}elseif(bricks_is_builder_call()){
-				$post_id = !empty($_REQUEST['postId']) ? absint($_REQUEST['postId']) : '';
+			} else if ( bricks_is_builder_call() ) {
+				$post_id = ! empty( $_REQUEST['postId'] ) ? absint( $_REQUEST['postId'] ) : '';
 				$_gd_post = geodir_get_post_info( $post_id );
 				$term_id = ! empty( $_gd_post->default_category ) ? absint( $_gd_post->default_category ) : 0;
-			}
-
-			// if we still dont have a terms ID we might be in a loop
-			if ( ! $term_id ) {
-				$term_id = \Bricks\Query::get_loop_object_id();
-
 			}
 
 			if ( $term_id ) {
@@ -174,9 +178,6 @@ class Provider_Geodir extends Base {
 			}
 
 
-
-
-//			echo  $show.'###'. $term_id.'###'.$key.'###'.$context;
 
 			return apply_filters( 'geodir_bricks_get_cat_meta_tag_value', $value, $key, $tag, $args, $context, $post, $this, $term_id );
 		}
