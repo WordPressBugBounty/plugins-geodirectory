@@ -637,6 +637,7 @@ function geodir_get_widgets(){
 		'GeoDir_Widget_Single_Taxonomies',
 		'GeoDir_Widget_Single_Next_Prev',
 		'GeoDir_Widget_Single_Reviews',
+		'GeoDir_Widget_Tags',
 		'GeoDir_Widget_Post_Distance',
 		'GeoDir_Widget_Map_Pinpoint',
 		'GeoDir_Widget_Page_Title',
@@ -1351,26 +1352,20 @@ function geodir_search_form() {
 	global $geodir_search_widget_params;
 
 	$args = array();
+
 	if ( wp_doing_ajax() && ! empty( $_POST['keepArgs'] ) ) {
+		// Yes this has 4 html codes, all 4 are needed.
+		$KeepArgs = str_replace( array('“', '”', '″', '„' ), '"', $_POST['keepArgs'] );
 
-		// yes this has 3 html codes, all 3 are needed.
-		$KeepArgs = str_replace( array('“','”','″'), '"', $_POST['keepArgs'] );
-
-//		echo $_POST['keepArgs'].'###'." \n".$KeepArgs;
 		$_args = json_decode( stripslashes( sanitize_text_field( $KeepArgs  ) ), true );
-//		print_r( $_args );
 
 		if ( ! empty( $_args ) && is_array( $_args ) ) {
 			$args = $_args;
 		}
 	}
 
-
-
 	$instance = $args;
 	$keep_args = $args;
-//	print_r( $instance );
-
 
 	// filters position
 	$geodir_search_widget_params['filters_pos'] = ! empty( $instance['filters_pos'] ) ? esc_attr($instance['filters_pos']) : '';
@@ -1393,7 +1388,7 @@ function geodir_search_form() {
 			'rounded_size_lg' => isset( $instance['btn_rounded_size_lg'] ) ? $instance['btn_rounded_size_lg'] : '',
 		)
 	);
-	$geodir_search_widget_params['buttons_class'] .= $instance['btn_bg'] ? ' btn-' . esc_attr( $instance['btn_bg'] ) : 'btn-primary';
+	$geodir_search_widget_params['buttons_class'] .= $instance['btn_bg'] ? ' btn-' . esc_attr( $instance['btn_bg'] ) : ' btn-primary';
 	$geodir_search_widget_params['buttons_class'] .= $instance['input_size'] ? ' btn-' . esc_attr( $instance['input_size'] ) : '';
 	if ( 'circle' === $instance['btn_rounded_size'] || 'circle' === $instance['btn_rounded_size_md'] || 'circle' === $instance['btn_rounded_size_lg']) {
 		$geodir_search_widget_params['buttons_class'] .= ' px-3';
