@@ -74,7 +74,7 @@ class GeoDir_Admin_Settings {
 	 * Save the settings.
 	 */
 	public static function save() {
-		global $current_tab;
+		global $current_tab, $geodir_settings_error;
 
 		if ( empty( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'geodirectory-settings' ) ) {
 			die( __( 'Action failed. Please refresh the page and retry.', 'geodirectory' ) );
@@ -82,6 +82,20 @@ class GeoDir_Admin_Settings {
 
 		// Trigger actions
 		do_action( 'geodir_settings_save_' . $current_tab );
+
+		// Show error message.
+		if ( ! empty( $geodir_settings_error ) ) {
+			if ( is_array( $geodir_settings_error ) ) {
+				foreach ( $geodir_settings_error as $message ) {
+					self::add_error( $message );
+				}
+			} else {
+				self::add_error( $geodir_settings_error );
+			}
+
+			return;
+		}
+
 		do_action( 'geodir_update_options_' . $current_tab );
 		do_action( 'geodir_update_options' );
 
@@ -1820,24 +1834,27 @@ class GeoDir_Admin_Settings {
 	 */
 	public static function check_download_folder_protection() {
 		$upload_dir      = wp_upload_dir();
-		$downloads_url   = $upload_dir['basedir'] . '/geodir_uploads';
-		$download_method = get_option( 'geodir_file_download_method' );
+		$geodir_temp_dir = $upload_dir['basedir'] . '/geodir_temp/';
+		$index_file_path = $geodir_temp_dir . 'index.php';
 
-		if ( 'redirect' == $download_method ) {
+		if ( file_exists( $index_file_path ) ) {
+			// index file exists.
+			return true;
+		}
 
-			// Redirect method - don't protect
-			if ( file_exists( $downloads_url . '/.htaccess' ) ) {
-				unlink( $downloads_url . '/.htaccess' );
+		if ( wp_mkdir_p( $geodir_temp_dir ) ) {
+			$file = @fopen( $index_file_path, 'w' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_read_fopen
+
+			if ( false === $file ) {
+				return new WP_Error( 'geodir_temp_dir_error', __( 'Unable to protect geodir_temp folder from browsing.', 'geodirectory' ) );
 			}
+
+			fwrite( $file, "<?php\n// Silence is golden.\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fwrite
+			fclose( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_fclose
+
+			return true;
 		} else {
-
-			// Force method - protect, add rules to the htaccess file
-			if ( ! file_exists( $downloads_url . '/.htaccess' ) ) {
-				if ( $file_handle = @fopen( $downloads_url . '/.htaccess', 'w' ) ) {
-					fwrite( $file_handle, 'deny from all' );
-					fclose( $file_handle );
-				}
-			}
+			return new WP_Error( 'geodir_temp_dir_error', __( 'Unable to create geodir_temp folder!', 'geodirectory' ) );
 		}
 	}
 
