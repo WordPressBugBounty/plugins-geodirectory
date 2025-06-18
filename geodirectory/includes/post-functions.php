@@ -1914,7 +1914,14 @@ function geodir_validate_custom_field_value_textarea( $value, $gd_post, $custom_
 				$value = is_scalar( $value ) ? geodir_sanitize_textarea_field( $value ) : $value;
 			}
 		}
+
+		// post_content saved early, so don't need sanitize.
+		if ( ! empty( $value ) && $custom_field->htmlvar_name != 'post_content' ) {
+			/** This filter is documented in includes/class-geodir-post-data.php */
+			$value = apply_filters( 'geodir_extra_sanitize_textarea_field', $value, array( 'default' => $value, 'field_key' => $custom_field->htmlvar_name, 'gd_post' => $gd_post, 'allow_html' => $html ) );
+		}
 	}
+
 	return $value;
 }
 add_filter( 'geodir_custom_field_value_html', 'geodir_validate_custom_field_value_textarea', 10, 6 );

@@ -82,6 +82,8 @@ class GeoDir_Post_Data {
 		// Private Address
 		add_filter( 'geodir_check_display_map', array( __CLASS__, 'check_display_map' ), 11, 2 );
 		add_action( 'clean_post_cache', array( __CLASS__, 'on_clean_post_cache' ), 10, 2 );
+
+		add_filter( 'geodir_extra_sanitize_textarea_field', array( __CLASS__, 'extra_sanitize_textarea_field' ), 10, 2 );
 	}
 
 	/**
@@ -766,21 +768,21 @@ class GeoDir_Post_Data {
 	 * @return array
 	 */
 	public static function wp_insert_post_data( $data, $postarr ) {
-
 		// Non GD post
 		if ( ! empty( $data['post_type'] ) && $data['post_type'] != 'revision' && ! geodir_is_gd_post_type( $data['post_type'] ) ) {
 			return $data;
 		}
 
-		// check its a GD CPT first
+		// Check its a GD CPT first
 		if (
 			( isset( $data['post_type'] ) && in_array( $data['post_type'], geodir_get_posttypes() ) )
 			|| ( isset( $data['post_type'] ) && $data['post_type'] == 'revision' && in_array( get_post_type( $data['post_parent'] ), geodir_get_posttypes() ) && ( ! isset( self::$post_temp ) || empty( self::$post_temp ) ) )
 		) {
-			//if the post_category or tags_input are empty and not sent as a $_REQUEST we remove them so they don't blank values
+			// If the post_category or tags_input are empty and not sent as a $_REQUEST we remove them so they don't blank values
 			if ( empty( $postarr['post_category'] ) && ! isset( $_REQUEST['post_category'] ) && ! isset( $_REQUEST['tax_input'] ) ) {
 				unset( $postarr['post_category'] );
 			}
+
 			if ( empty( $postarr['tags_input'] ) && ! isset( $_REQUEST['tags_input'] ) && ! isset( $_REQUEST['tax_input'] ) ) {
 				unset( $postarr['tags_input'] );
 			}
@@ -790,11 +792,23 @@ class GeoDir_Post_Data {
 				unset( $postarr['tags_input'] );
 			}
 
-			// assign the temp post data
+			// Assign the temp post data
 			self::$post_temp = $postarr;
-		}elseif(!empty( self::$post_temp ) && $data['post_type'] == 'revision' && isset($data['post_parent']) && $data['post_parent']== self::$post_temp['ID']){
-			// we might be saving a post revision at the same time so we don't blank the post_temp here
-		}else{
+
+			if ( ! empty( $data['post_content'] ) ) {
+				/**
+				 * Set filter for textarea extra sanitization.
+				 *
+				 * @since 2.8.120
+				 *
+				 * @param string $post_content The post content.
+				 * @param array  $args Args array.
+				 */
+				$data['post_content'] = apply_filters( 'geodir_extra_sanitize_textarea_field', $data['post_content'], array( 'default' => $data['post_content'], 'field_key' => 'post_content', 'postdata' => $data, 'postarr' => $postarr ) );
+			}
+		} else if ( ! empty( self::$post_temp ) && $data['post_type'] == 'revision' && isset( $data['post_parent'] ) && $data['post_parent'] == self::$post_temp['ID'] ) {
+			// We might be saving a post revision at the same time so we don't blank the post_temp here
+		} else {
 			self::$post_temp = null;
 		}
 
@@ -2559,5 +2573,42 @@ class GeoDir_Post_Data {
 			// Flush widget listings cache.
 			geodir_cache_flush_group( 'widget_listings_' . $post->post_type );
 		}
+	}
+
+	/**
+	 * Textarea field extra sanitization.
+	 *
+	 * @since 2.8.120
+	 *
+	 * @param array|string $content The content.
+	 * @param array  $args Args array.
+	 * @return mixed Sanitized content.
+	 */
+	public static function extra_sanitize_textarea_field( $content, $args = array() ) {
+		if ( empty( $content ) ) {
+			return $content;
+		}
+
+		/**
+		 * Check to strip shortcodes for a given content.
+		 *
+		 * @since 2.9.120
+		 *
+		 * @param bool   $strip_shortcodes True to strip shortcodes.
+		 * @param string $htmlvar_name Custom field name.
+		 * @param string $value Field value.
+		 * @param array  $args Extra args.
+		 */
+		$strip_shortcodes = apply_filters( 'geodir_textarea_field_strip_shortcodes', true, $content, $args );
+
+		if ( $strip_shortcodes ) {
+			if ( is_array( $content ) ) {
+				$content = array_map( 'geodir_strip_shortcodes', $content );
+			} else if ( is_scalar( $content ) ) {
+				$content = geodir_strip_shortcodes( $content );
+			}
+		}
+
+		return $content;
 	}
 }
