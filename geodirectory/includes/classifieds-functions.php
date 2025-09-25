@@ -83,7 +83,25 @@ function geodir_get_classified_statuses( $post_type = '' ) {
 function geodir_classified_active_statuses( $post_type ) {
 	$post_types = geodir_get_posttypes( 'array' );
 
-	$post_type_array = ! empty( $post_types[ $post_type ] ) ? $post_types[ $post_type ] : array();
+	if ( is_array( $post_type ) ) {
+		$statuses = array();
+
+		foreach ( $post_type as $_post_type ) {
+			$_statuses = geodir_classified_active_statuses( $_post_type );
+
+			if ( ! empty( $_statuses ) ) {
+				$statuses = array_merge( $statuses, $_statuses );
+			}
+		}
+
+		if ( ! empty( $statuses ) ) {
+			$statuses = array_filter( array_unique( $statuses ) );
+		}
+
+		return $statuses;
+	}
+
+	$post_type_array = ! empty( $post_types ) && ! empty( $post_types[ $post_type ] ) ? $post_types[ $post_type ] : array();
 	$statuses = isset( $post_type_array['classified_features'] ) ? $post_type_array['classified_features'] : array();
 
 	return apply_filters( 'geodir_classified_active_statuses', $statuses, $post_type );
