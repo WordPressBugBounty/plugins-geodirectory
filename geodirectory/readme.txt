@@ -3,8 +3,8 @@ Contributors: stiofansisland, paoltaia, ayecode
 Donate link: https://wpgeodirectory.com
 Tags: business directory, listings, directory plugin, classifieds, directory
 Requires at least: 5.0
-Tested up to: 6.8
-Stable tag: 2.8.135
+Tested up to: 6.9
+Stable tag: 2.8.151
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -318,6 +318,64 @@ We don't offer free trials, but we have a 30-day money-back guarantee if you are
 == Changelog ==
 
 __WARNING: GDv2 is a significant update over GDv1 and may require manual work, such as adding widgets to sidebars to recreate your current layout. As always, we recommend trying this on a staging site first. [Learn more](https://wpgeodirectory.com/documentation/article/how-tos/upgrading-from-gdv1-to-gdv2/)__
+
+= GeoDirectory v2.8.151 - 2026-01-29 =
+* Validation patten shows slash when pattern contains quote - FIXED
+* Default sorting is not applied on empty search when near parameter is not set in url - FIXED
+* Post title rendered incorrect on term archive page when term id and post id are same - FIXED
+* CPT > Tabs requires to reload page to add another shortcode tab - FIXED
+
+= GeoDirectory v2.8.150 - 2026-01-22 =
+* GD > Listings view all link should redirect to search page when country/region/city is set - CHANGED
+* Merge AUI 0.2.43, SD 1.2.31 & AyeCode Connect Helper 1.0.5 - CHANGED
+
+= GeoDirectory v2.8.149 - 2026-01-01 =
+* Prevent new custom field with key "content" - FIXED
+
+= GeoDirectory v2.8.148 - 2025-12-25 =
+* Some changes for Web Accessibility 2.0 - CHANGED
+* PHP notice during REST API add listing - FIXED
+
+= GeoDirectory v2.8.147 - 2025-12-18 =
+* Hook added to check comment images upload - ADDED
+
+= GeoDirectory v2.8.146 - 2025-12-11 =
+* GD > Listings added more options to customize pagination - CHANGED
+* Rating stars count should respect default rating settings - CHANGED
+
+= GeoDirectory v2.8.145 - 2025-12-05 =
+* WordPress 6.9 compatibility check - COMPATIBILITY
+
+= GeoDirectory v2.8.143 - 2025-11-27 =
+* Archive Item template don't render when setup with Oxygen builder - FIXED
+* Hook added to filter GD Loop preview post type - ADDED
+
+= GeoDirectory v2.8.142 - 2025-11-20 =
+* GhostPool Core plugin compatibility changes - ADDED
+
+= GeoDirectory v2.8.141 - 2025-11-13 =
+* Bricks block settings don't saves default value properly - FIXED
+
+= GeoDirectory v2.8.140 - 2025-11-10 =
+* Extra validation for post attachment upload - FIXED
+* GD Loop issue with the Bricks elements with same parent block - FIXED
+
+= GeoDirectory v2.8.139 - 2025-11-06 =
+* Badge with %%input%% replaces incorrect value when used in GD > Dynamic Content - FIXED
+
+= GeoDirectory v2.8.138 - 2025-10-30 =
+* PHP warning "Illegal offset type" when taxonomy object_type is an array - FIXED
+* Special Character in tags breaking tag display in gd_post_features block - FIXED
+* Hook added to filter AJAX post success response - ADDED
+* Conflict with LearnDash LMS on search page - FIXED
+* GD > Post Images wrapper border radius is not working on BS5 - FIXED
+
+= GeoDirectory v2.8.137 - 2025-10-16 =
+* Hover style is not working on clone BS element - FIXED
+
+= GeoDirectory v2.8.136 - 2025-10-09 =
+* jQuery.exists() conflicts with Newspaperly theme - FIXED
+* Prevent add listing form from being submitted while an image is uploading - CHANGED
 
 = GeoDirectory v2.8.135 - 2025-10-02 =
 * Map widget inline script is not loading with Sage Starter Theme - FIXED
