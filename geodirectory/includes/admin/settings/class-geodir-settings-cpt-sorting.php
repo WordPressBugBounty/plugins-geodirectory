@@ -628,12 +628,12 @@ if ( ! class_exists( 'GeoDir_Settings_Cpt_Sorting', false ) ) :
 		 * @return int|string
 		 */
 		public static function save_custom_field( $field = array() ) {
-			global $wpdb, $plugin_prefix;
+			global $wpdb;
 
 			$field = self::sanatize_custom_field( $field );
 
 			// Check field exists.
-			$exists = self::field_exists($field->htmlvar_name,$field->post_type, $field->sort );
+			$exists = self::field_exists( $field->htmlvar_name, $field->post_type, $field->sort );
 
 			if ( is_wp_error( $exists ) ) {
 				return new WP_Error( 'failed', $exists->get_error_message() );
@@ -643,6 +643,8 @@ if ( ! class_exists( 'GeoDir_Settings_Cpt_Sorting', false ) ) :
 			} else if ( $exists && $field->field_id === 0 ) {
 				// Its new
 				$exists = false;
+			} else if ( ! $exists && (int) $field->field_id > 0 ) {
+				$exists = true;
 			}
 
 			// If this is set as the default blank all the others first just incase.
@@ -831,6 +833,7 @@ if ( ! class_exists( 'GeoDir_Settings_Cpt_Sorting', false ) ) :
 		public static function clear_sort_cache( $post_type ) {
 			wp_cache_delete( "geodir_get_posts_default_sort_{$post_type}" );
 			wp_cache_delete( "geodir_get_sort_options_{$post_type}" );
+			geodir_cache_delete( 'gd_sort_by_options_' . $post_type, 'gd_sort_by_options' );
 		}
 	}
 
