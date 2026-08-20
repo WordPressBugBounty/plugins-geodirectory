@@ -4,7 +4,7 @@ Donate link: https://wpgeodirectory.com
 Tags: business directory, listings, directory plugin, classifieds, directory
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 2.8.174
+Stable tag: 2.8.175
 Requires PHP: 5.6
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -230,6 +230,9 @@ See these tutorials to see how you can build:
 
 The same templates are available for the Kadence Theme with Gutenberg and the Kadence Block Plugin. 
 
+== Security Reporting ==
+If you discover a vulnerability or any other security-related issue in GeoDirectory, please report it privately to info@wpgeodirectory.com or contact@wpgeodirectory.com so it reaches the appropriate team members.
+
 == Installation ==
 
 = Minimum Requirements =
@@ -305,6 +308,12 @@ Yes, you can use GeoDirectory for businesses with a physical location and online
 
 We don't offer free trials, but we have a 30-day money-back guarantee if you are unhappy with our products or service.
 
+= How do I report a security vulnerability? =
+
+If you discover a vulnerability or other security-related issue in GeoDirectory, please email info@wpgeodirectory.com or contact@wpgeodirectory.com. This ensures your report reaches the appropriate team members as quickly as possible.
+
+Please include as much relevant information as possible and avoid publicly disclosing the issue until our team has had a reasonable opportunity to investigate and fix it.
+
 == Screenshots ==
 
 1. Geo Directory Home Page.
@@ -318,6 +327,9 @@ We don't offer free trials, but we have a 30-day money-back guarantee if you are
 == Changelog ==
 
 __WARNING: GDv2 is a significant update over GDv1 and may require manual work, such as adding widgets to sidebars to recreate your current layout. As always, we recommend trying this on a staging site first. [Learn more](https://wpgeodirectory.com/documentation/article/how-tos/upgrading-from-gdv1-to-gdv2/)__
+
+= GeoDirectory v2.8.175 - 2026-08-20 =
+* Validate review author email in single review check SQL – FIXED/SECURITY
 
 = GeoDirectory v2.8.174 - 2026-08-18 =
 * Added extra validation in REST auth requests – FIXED/SECURITY
