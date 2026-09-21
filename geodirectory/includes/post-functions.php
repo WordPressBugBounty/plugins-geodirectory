@@ -764,27 +764,34 @@ function geodir_get_pending_statuses( $args = array() ) {
  * @return array Post statuses.
  */
 function geodir_get_post_stati( $context, $args = array() ) {
-	$statuses = array();
-	$publish_statuses = geodir_get_publish_statuses( $args );
+	$statuses         = array();
+	$publish_statuses = (array) geodir_get_publish_statuses( $args );
+	$default_statuses = $publish_statuses;
 
-	switch( $context ) {
+	switch ( $context ) {
 		case 'author-archive':
 		case 'widget-listings-author':
 			$custom_statuses = geodir_register_custom_statuses();
 
-			if ( ! empty( $custom_statuses ) ) {
+			if ( ! empty( $custom_statuses ) && is_array( $custom_statuses ) ) {
 				$publish_statuses = array_merge( $publish_statuses, array_keys( $custom_statuses ) );
 			}
 
 			$statuses = array_merge( $publish_statuses, array( 'pending', 'draft', 'private', 'future' ) );
 			break;
+
+		case 'map':
+		case 'posts-count-live':
 		case 'search':
+		case 'widget-listings':
 			$statuses = $publish_statuses;
 			break;
+
 		case 'single-map':
 		case 'single-map-public':
 			$statuses = array_merge( $publish_statuses, array( 'gd-closed', 'gd-expired' ) );
 			break;
+
 		case 'single-map-author':
 			$statuses            = array_merge( $publish_statuses, array( 'pending', 'draft', 'inherit', 'auto-draft', 'private', 'future' ) );
 			$non_public_statuses = geodir_get_post_stati( 'non-public', $args );
@@ -793,38 +800,44 @@ function geodir_get_post_stati( $context, $args = array() ) {
 				$statuses = array_merge( $statuses, $non_public_statuses );
 			}
 			break;
-		case 'map':
-			$statuses = $publish_statuses;
-			break;
-		case 'non-public':
-			$custom_statuses = geodir_register_custom_statuses();
 
-			foreach ( $custom_statuses as $status => $data ) {
-				if ( isset( $data['public'] ) && $data['public'] === false ) {
-					$statuses[] = $status;
+		case 'non-public':
+			$default_statuses = array( 'pending' );
+			$custom_statuses  = geodir_register_custom_statuses();
+
+			if ( ! empty( $custom_statuses ) && is_array( $custom_statuses ) ) {
+				foreach ( $custom_statuses as $status => $data ) {
+					if ( isset( $data['public'] ) && $data['public'] === false ) {
+						$statuses[] = $status;
+					}
 				}
 			}
 			break;
-		case 'widget-listings':
-			$statuses = $publish_statuses;
 
-			if ( current_user_can( 'manage_options' ) ) {
-				//$statuses[] = 'private'; // i don't see how this is useful on the front end, it really slows the query down for admins doing testing (stiofan)
+		case 'import':
+			$post_type     = ! empty( $args['post_type'] ) ? $args['post_type'] : '';
+			$post_statuses = geodir_get_post_statuses( $post_type );
+			
+			if ( ! empty( $post_statuses ) && is_array( $post_statuses ) ) {
+				$statuses = array_keys( $post_statuses );
 			}
 			break;
-		case 'import':
-			$statuses = array_keys( geodir_get_post_statuses( ( ! empty( $args['post_type'] ) ? $args['post_type'] : '' ) ) );
-			break;
-		case 'posts-count-live':
-			$statuses = $publish_statuses;
-			break;
+
 		case 'posts-count-offline':
-			$statuses = geodir_get_post_stati( 'non-public', $args );
-			$statuses = array_merge( $statuses, array( 'pending', 'draft', 'private', 'future' ) );
+			$default_statuses = array( 'pending' );
+			$statuses         = array( 'pending', 'draft', 'private', 'future' );
+			$_statuses        = geodir_get_post_stati( 'non-public', $args );
+
+			if ( ! empty( $_statuses ) && is_array( $_statuses ) ) {
+				$statuses     = array_merge( $_statuses, $statuses );
+			}
 			break;
+
 		case 'unpublished':
-			$statuses = array( 'pending', 'draft', 'auto-draft', 'trash' );
+			$default_statuses = array( 'pending' );
+			$statuses         = array( 'pending', 'draft', 'auto-draft', 'trash' );
 			break;
+
 		default:
 			$statuses = $publish_statuses;
 			break;
@@ -832,9 +845,11 @@ function geodir_get_post_stati( $context, $args = array() ) {
 
 	$statuses = apply_filters( 'geodir_get_post_stati', $statuses, $context, $args );
 
-	if ( ! empty( $statuses ) ) {
-		$statuses = array_unique( $statuses );
+	if ( empty( $statuses ) || ! is_array( $statuses ) ) {
+		$statuses = (array) $default_statuses;
 	}
+
+	$statuses = array_unique( $statuses );
 
 	return $statuses;
 }
@@ -1136,16 +1151,22 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 					$extra_fields = stripslashes_deep( maybe_unserialize( $field['extra_fields'] ) );
 
 					if ( ! empty( $extra_fields ) && isset( $extra_fields['is_price'] ) && $extra_fields['is_price'] ) {
-						if ( ceil( $match_value ) > 0 ) {
+						if ( ceil( (float) $match_value ) > 0 ) {
 							$match_value = geodir_currency_format_number( $match_value, $field );
+						} else {
+							$match_value = '';
 						}
 					} else if ( isset( $field['data_type'] ) && $field['data_type'] == 'INT' ) {
-						if ( ceil( $match_value ) > 0 ) {
+						if ( ceil( (float) $match_value ) > 0 ) {
 							$match_value = geodir_cf_format_number( $match_value, $field );
+						} else {
+							$match_value = '';
 						}
 					} else if ( isset( $field['data_type'] ) && ( $field['data_type'] == 'FLOAT' || $field['data_type'] == 'DECIMAL' ) ) {
-						if ( ceil( $match_value ) > 0 ) {
+						if ( ceil( (float) $match_value ) > 0 ) {
 							$match_value = geodir_cf_format_decimal( $match_value, $field );
+						} else {
+							$match_value = '';
 						}
 					}
 				}
@@ -1197,6 +1218,17 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 						$badge = __( 'Default Category', 'geodirectory' ); // default_category don't have frontend_title.
 					}
 				}
+
+				/*
+				 * Decode the ADMIN authored badge text here, before any listing value is merged
+				 * into it. Doing it after the merge would also un-escape $match_value, which both
+				 * revives injected markup and stops a listing value that legitimately contains
+				 * "&lt;...&gt;" from rendering as the literal text the author typed.
+				 */
+				if ( ! empty( $badge ) ) {
+					$badge = wp_specialchars_decode( $badge, ENT_QUOTES );
+				}
+
 				if( !empty( $badge ) && $badge = str_replace("%%input%%",$match_value,$badge) ){
 					// will be replace in condition check
 				}
@@ -1344,7 +1376,7 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 					$extra_attributes = str_replace("&quot;",'"',$extra_attributes);
 				}
 
-				$badge = ! empty( $badge ) ? __( wp_specialchars_decode( $badge, ENT_QUOTES ), 'geodirectory' ) : '';
+				$badge = ! empty( $badge ) ? wp_kses_post( __( $badge, 'geodirectory' ) ) : '';
 
 				// title
 				$title = $badge ? $badge : ( ! empty( $field['frontend_title'] ) ? __( $field['frontend_title'], 'geodirectory' ) : '' );
@@ -1490,7 +1522,7 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 						$pop_link = true;
 
 						if ( ! empty( $args['popover_title'] ) ) {
-							$btn_args['title'] = ! empty( $args['link'] ) && $args['link'] != '#'  ? "<a href='" . esc_url( $args['link'] ) . "' $new_window $rel>" . esc_html( $args['popover_title'] ) . "</a>" : esc_html( $args['popover_title'] );
+							$btn_args['title'] = ! empty( $args['link'] ) && $args['link'] != '#'  ? "<a href='" . esc_url( $args['link'] ) . "' $new_window $rel>" . esc_html( geodir_esc_js_attrs( $args['popover_title'] ) ) . "</a>" : esc_html( geodir_esc_js_attrs( $args['popover_title'] ) );
 						}
 
 						if ( ! empty( $args['popover_text'] ) ) {
@@ -1499,15 +1531,16 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 					} else if ( ! empty( $args['tooltip_text'] ) ) {
 						$btn_args['data-' . $bs_prefix . 'toggle'] = "tooltip";
 						$btn_args['data-' . $bs_prefix . 'placement'] = "top";
-						$btn_args['title'] = esc_attr( $args['tooltip_text'] );
+						$btn_args['title'] = esc_attr( geodir_esc_js_attrs( $args['tooltip_text'] ) );
 					}
 
 					// hover content
-					if(!empty($args['hover_content'])){
-						$btn_args['hover_content'] = $args['hover_content'];
+					if ( ! empty( $args['hover_content'] ) ) {
+						$btn_args['hover_content'] = geodir_esc_js_attrs( $args['hover_content'] );
 					}
-					if(!empty($args['hover_icon'])){
-						$btn_args['hover_icon'] = $args['hover_icon'];
+
+					if ( ! empty( $args['hover_icon'] ) ) {
+						$btn_args['hover_icon'] = geodir_esc_js_attrs( $args['hover_icon'] );
 					}
 
 					// style
@@ -1527,7 +1560,6 @@ function geodir_get_post_badge( $post_id ='', $args = array() ) {
 						$btn_args['new_window'] = true;
 					}
 					if(!empty($args['icon_class'])) { $btn_args['icon'] = $args['icon_class'];}
-
 					$output = '<span class="bsui gd-badge-meta">';
 					if(!empty($args['size'])){$output .= '<span class="'.esc_attr($args['size']).'">';}
 					$output .= aui()->badge( $btn_args );
